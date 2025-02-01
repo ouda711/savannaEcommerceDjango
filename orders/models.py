@@ -17,6 +17,10 @@ class OrderManager(models.Manager):
         return Order.objects.exclude(order_items__product_id=product.id).first()
 
 
+class Customer:
+    pass
+
+
 class Order(TimestampedModel):
     ORDERED = 0
     IN_TRANSIT = 1
