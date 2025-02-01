@@ -17,11 +17,16 @@ class Category(TimestampedModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(db_index=True, unique=True)
     description = models.CharField(max_length=140)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.CASCADE)
 
     objects = CategoryManager()
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        # Create a slug combining parent name and current category name
+        if self.parent:
+            self.slug = slugify(f"{self.parent.name}-{self.name}")
+        else:
+            self.slug = slugify(self.name)
         return super(Category, self).save(*args, **kwargs)
 
     def __str__(self):

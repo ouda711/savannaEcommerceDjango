@@ -3,6 +3,7 @@ from django.db import models
 from polymorphic.models import PolymorphicModel
 
 from categories.models import Category
+from products.models import Product
 from tags.models import Tag
 from users.models import AppUser
 
@@ -21,6 +22,8 @@ class CategoryImage(FileUpload):
 class TagImage(FileUpload):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name='images')
 
+class ProductImage(FileUpload):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
 
 class ProfileImage(FileUpload):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE, related_name='avatars')

@@ -46,7 +46,11 @@ INSTALLED_APPS = [
     'shared',
     'fileuploads',
     'categories',
-    'tags'
+    'tags',
+    'products',
+    'addresses',
+    'orders',
+    'comments'
 ]
 
 MIDDLEWARE = [
