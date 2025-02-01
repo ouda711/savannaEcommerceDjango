@@ -43,7 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'users',
-    'shared'
+    'shared',
+    'fileuploads',
+    'categories',
+    'tags'
 ]
 
 MIDDLEWARE = [
