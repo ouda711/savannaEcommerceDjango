@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'users',
+    'shared'
 ]
 
 MIDDLEWARE = [
@@ -76,8 +79,12 @@ WSGI_APPLICATION = 'savannaEcommerceDjango.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'savannaEcommerceDjango',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -118,7 +125,28 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+JWT = {
+    'SECRET': 'JWT_SUPER_SECRET',
+}
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'shared.errors.app_exception_handler',
+    'DEFAULT_PAGINATION_CLASS': 'shared.pagination.AppPaginator',
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'users.authentication.jwt_response',
+    'JWT_PAYLOAD_HANDLER': 'users.authentication.jwt_payload_handler',
+    # 'JWT_ISSUER': 'http://melardev.com',
+    'JWT_ALGORITHM': 'HS512',
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+
+    'JWT_VERIFY_EXPIRATION': False,
+    'JWT_SECRET_KEY': JWT['SECRET'],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+AUTH_USER_MODEL = 'users.AppUser'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
