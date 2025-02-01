@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import environ
 from pathlib import Path
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-howedk39s%-m18lm9tj%anob%w!#h*!g5=_3t=x3q+vhq)$wup'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=False)
+
 
 ALLOWED_HOSTS = []
 
@@ -80,11 +84,11 @@ WSGI_APPLICATION = 'savannaEcommerceDjango.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'savannaEcommerceDjango',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USERNAME'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT'),
     }
 }
 
@@ -125,21 +129,17 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-JWT = {
-    'SECRET': 'JWT_SUPER_SECRET',
-}
-
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'shared.errors.app_exception_handler',
     'DEFAULT_PAGINATION_CLASS': 'shared.pagination.AppPaginator',
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'users.authentication.jwt_response',
     'JWT_PAYLOAD_HANDLER': 'users.authentication.jwt_payload_handler',
-    # 'JWT_ISSUER': 'http://melardev.com',
+    'JWT_ISSUER': 'https://www.savannahinformatics.com/',
     'JWT_ALGORITHM': 'HS512',
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 
     'JWT_VERIFY_EXPIRATION': False,
-    'JWT_SECRET_KEY': JWT['SECRET'],
+    'JWT_SECRET_KEY': env('JWT_SECRET_KEY'),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
