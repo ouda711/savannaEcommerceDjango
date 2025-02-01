@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from customers.models import Customer
+from users.models import AppUser
 from users.serializers import UserUsernameAndIdSerializer
 from addresses.serializers import AddressSerializer  # Assuming you have an Address serializer
 from orders.serializers import OrderSerializer  # Assuming you have an Order serializer
@@ -11,7 +12,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'created_at', 'updated_at', 'user', 'address', 'orders']
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'user']
 
     def get_user(self, customer):
         """
@@ -51,15 +52,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         return response
 
     def create(self, validated_data):
-        """
-        Custom create method to associate the customer with a user and set default fields
-        """
-        user = self.context['user']
-        customer = Customer.objects.create(
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            email=validated_data['email'],
-            phone=validated_data['phone'],
-            user=user
-        )
+        user_data = validated_data.pop('user')
+        user = AppUser.objects.create_user(**user_data)
+
+        # Then create the customer and associate the created user
+        customer = Customer.objects.create(user=user, **validated_data)
         return customer

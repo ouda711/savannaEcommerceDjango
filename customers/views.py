@@ -1,17 +1,25 @@
+import environ
+from pathlib import Path
 from rest_framework import generics, status
 from rest_framework.response import Response
 from customers.models import Customer
 from customers.serializers import CustomerSerializer
+from savannaEcommerceDjango.settings import env
 from shared.renderers import AppJsonRenderer
 from shared.views import ResourceListView
+from users.models import AppUser
 from users.authentication import IsAdminOrOwnerOrReadOnly
 from addresses.models import Address  # Assuming Address model is relevant to customers
 
 class CustomerListView(ResourceListView, generics.CreateAPIView):
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    env = environ.Env()
+    environ.Env.read_env(BASE_DIR / ".env")
+
     serializer_class = CustomerSerializer
 
     def get_queryset(self):
-        return Customer.objects.filter(user=self.request.user)
+        return Customer.objects.all()
 
     def get_serializer_context(self):
         serializer_context = super(CustomerListView, self).get_serializer_context()
@@ -22,24 +30,37 @@ class CustomerListView(ResourceListView, generics.CreateAPIView):
         return [AppJsonRenderer(resources_name='customers')]
 
     def create(self, request, *args, **kwargs):
-        # Creating a new customer and associating it with the authenticated user
-        serializer_context = {
-            'user': request.user,
-            'request': request,
-            'include_user': True  # Include user details when creating a customer
+        """
+        Create a new customer instance by first creating a user with a default password.
+        Then associate the user with the customer.
+        """
+        # Generate a random password or use a default one
+        default_password = env('DEFAULT_PASSWORD')
+
+        # Create the user first
+        user_data = {
+            'username': request.data.get('email'),  # You can use the email as the username
+            'email': request.data.get('email'),
+            'password': default_password,
         }
 
-        request_data = request.data
-        request_data['user'] = request.user  # Associate the customer with the current user
+        # Create the user
+        user = AppUser.objects.create_user(**user_data)
 
-        # You can add any other necessary validation here
-        serializer = self.serializer_class(data=request_data, context=serializer_context)
-        serializer.is_valid(raise_exception=True)
-        customer = serializer.save()
+        # Now create the customer
+        customer_data = request.data.copy()  # Copy request data to use for customer creation
+        customer_data['user'] = user.id  # Associate the created user with the customer
 
-        data = {'full_messages': ['Customer created successfully']}
-        data.update(CustomerSerializer(customer, context=serializer_context).data)
-        return Response(data, status=status.HTTP_201_CREATED)
+        # Use the serializer to create the customer
+        serializer = self.get_serializer(data=customer_data, context={'user': request.user})
+        if serializer.is_valid():
+            serializer.save()
+            # Add any custom logic if needed, e.g., sending an email with the default password
+
+            # Return success response with the customer data
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomerDetailsView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CustomerSerializer

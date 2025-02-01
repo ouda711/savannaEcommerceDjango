@@ -1,85 +1,59 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework_jwt.settings import api_settings
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.serializers import UserUsernameAndIdSerializer
 
 
-class JwtExactritr(JSONWebTokenAuthentication):
+class JwtExtractor(JWTAuthentication):
     def get_jwt_values(self, request):
         pass
 
-def jwt_payload_handler(user):
-    """ Custom payload handler
-        Token encrypts the dictionary returned by this function, and can be decoded by rest_framework_jwt.utils.jwt_decode_handler
+
+def generate_tokens(user):
     """
+    Generates access and refresh tokens for a given user.
+    """
+    refresh = RefreshToken.for_user(user)
     return {
-        'user_id': user.pk,
-        'username': user.username,
-        'email': user.email,
-        "iss": "https://www.savannahinformatics.com/",
-        'roles': ['ROLE_ADMIN' if user.is_staff else 'ROLE_USER'],
-        'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
     }
 
-def jwt_response(token, user=None, request=None):
+
+def jwt_response(user, request=None):
     """
-            Returns the response data for both the login and refresh views.
-            Override to return a custom response such as including the
-            serialized representation of the User.
-
-            Example:
-
-            def jwt_response_payload_handler(token, user=None, request=None):
-                return {
-                    'token': token,
-                    'user': UserSerializer(user, context={'request': request}).data
-                }
-
+    Generates JWT response including access & refresh tokens and user data.
     """
-    roles = []
-    if user.is_staff:
-        roles.append('ROLE_ADMIN')
-    else:
-        roles.append('ROLE_USER')
-    user_dto = UserUsernameAndIdSerializer(user, context={'request': request}).data
-    user_dto.update({'roles': roles})
+    roles = ["ROLE_ADMIN"] if user.is_staff else ["ROLE_USER"]
+    user_data = UserUsernameAndIdSerializer(user, context={"request": request}).data
+    user_data.update({"roles": roles})
+
+    tokens = generate_tokens(user)
     return {
         "success": True,
-        'user': user_dto,
-        'token': token
+        "user": user_data,
+        "access": tokens["access"],
+        "refresh": tokens["refresh"],
     }
-
-def test(user):
-    jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-    jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
-    payload = jwt_payload_handler(user)
-    token = jwt_encode_handler(payload)
 
 
 class IsAdminOrReadOnly(BasePermission):
     """
-    The request is authenticated as a user, or is a read-only request.
+    Allows read-only access for all users, but restricts modification to admins.
     """
-
     def has_permission(self, request, view):
-        return (
-                request.method in permissions.SAFE_METHODS or
-                (request.user and
-                 request.user.is_staff)
-        )
+        return request.method in permissions.SAFE_METHODS or (request.user and request.user.is_staff)
 
 
 class IsAdminOrOwnerOrReadOnly(BasePermission):
-
+    """
+    Allows read-only access for all users, but write access only for admins or the resource owner.
+    """
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
-
         return request.user and (request.user.is_staff or obj.user == request.user)
