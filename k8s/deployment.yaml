@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+        - name: django
+          image: 727646512402.dkr.ecr.us-east-1.amazonaws.com/savanna-ecommerce-django:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DEBUG
+              value: "True"
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: secret-key
+            - name: DATABASE_NAME
+              value: savannaEcommerceDjango
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-postgresql
+                  key: postgres-password
+            - name: DATABASE_HOST
+              value: postgres-postgresql
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: jwt-secret-key
+            - name: DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: default-password
+            - name: AT_USERNAME
+              value: sandbox
+            - name: AT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: at-api-key
+            - name: AT_SENDER_ID
+              value: SAVANNAH
+            - name: EMAIL_BACKEND
+              value: django.core.mail.backends.smtp.EmailBackend
+            - name: EMAIL_HOST
+              value: sandbox.smtp.mailtrap.io
+            - name: EMAIL_PORT
+              value: "587"
+            - name: EMAIL_USE_TLS
+              value: "True"
+            - name: EMAIL_HOST_USER
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: 198a8fdc0badc1
+            - name: EMAIL_HOST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: 2c3c19fc9e6661
+            - name: ADMIN_EMAIL
+              value: admin@savannahinformatics.com
