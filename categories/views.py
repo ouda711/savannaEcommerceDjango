@@ -1,7 +1,12 @@
 from rest_framework import generics
+from rest_framework import status, views
+from rest_framework.response import Response
+from django.db.models import Avg
+
 
 from categories.models import Category
 from categories.serializers import CategoryIdAndNameSerializer
+from products.models import Product
 from shared.renderers import AppJsonRenderer
 from users.authentication import IsAdminOrReadOnly
 
@@ -39,3 +44,15 @@ class CategoryListCreateView(generics.ListCreateAPIView):
         super(CategoryListCreateView, self).perform_create(serializer)
         data = {'success': True, 'full_messages': ['Tag created successfully']}
         serializer.data.update(data)
+
+
+class CategoryAveragePriceView(views.APIView):
+    def get(self, request, category_id):
+        try:
+            category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        avg_price = Product.objects.filter(category=category).aggregate(Avg("price"))["price__avg"]
+
+        return Response({"category": category.name, "average_price": avg_price or 0.0}, status=status.HTTP_200_OK)

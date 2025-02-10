@@ -82,7 +82,7 @@ class ProductListView(generics.ListCreateAPIView):
         product = serializer.save()
 
         # add expects any number of argument, each one should be the data type expected
-        # if we want to pass a list, we have to expaned it, i.e from [tag1, tag2, tag3] to add(tag1, taq2, tag3)
+        # if we want to pass a list, we have to expand it, i.e from [tag1, tag2, tag3] to add(tag1, taq2, tag3)
         # that is achieved through `*`
         product.tags.add(*tags)
         product.categories.add(*categories)

@@ -23,6 +23,20 @@ environ.Env.read_env(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
+# Africa's Talking API Credentials
+AT_USERNAME = env("AT_USERNAME", default="sandbox")
+AT_API_KEY = env("AT_API_KEY")
+AT_SENDER_ID = env("AT_SENDER_ID", default=None)
+
+# Email Configuration
+EMAIL_BACKEND = env("EMAIL_BACKEND")
+EMAIL_HOST = env("EMAIL_HOST")
+EMAIL_PORT = env.int("EMAIL_PORT")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+ADMIN_EMAIL = env("ADMIN_EMAIL")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
 

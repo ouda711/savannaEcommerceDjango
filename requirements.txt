@@ -9,3 +9,5 @@ PyJWT==1.7.1
 python-dotenv==1.0.1
 pytz==2025.1
 sqlparse==0.5.3
+
+africastalking~=1.2.9
